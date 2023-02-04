@@ -17,8 +17,76 @@
 #include <sys/stat.h>
 
 #include <stdbool.h>
+
 #include <dirent.h>
+
 #include<unistd.h>
+
+
+
+char * copy_str(char * file_name,int line_no,int start_pos,int size,char * direction){
+
+    char line[1000][1000];
+	int k = 0 ;
+    FILE *fptr = NULL; char * res = (char *) malloc(size) ;
+        int i = 0; int end_pos ;
+    int tot;
+
+printf("%s\n%d %d %d\n%s\n" , file_name , line_no , start_pos , size , direction ) ;
+
+    fptr = fopen(file_name, "r");
+    while(fgets(line[i], 1000, fptr))
+	{
+        line[i][strlen(line[i]) - 1] = '\0';
+        i++;
+    }
+    tot = i;
+
+    for(i = 0; i < tot; ++i)
+    {
+        if(i+1==line_no){
+        //printf("%s\n", line[i]);
+         if(strcmp(direction,"--f") == 0){
+
+            int end_pos = start_pos+size ;
+        for(int j = start_pos ; j <end_pos ; j++){
+            res[k] = line[i][j] ;
+            ++k ;
+        }
+        }
+
+         if(strcmp(direction,"--b") == 0){
+
+             start_pos -= size ;
+             end_pos = size + start_pos ;
+
+            for(int j = start_pos ; j<end_pos  ; j++){
+
+                res[k] = line[i][j] ;
+
+                ++k ;
+            }
+         }
+}
+
+    }
+
+
+
+    fclose(fptr);
+    strcat(res , "\0" ) ;
+
+  printf("%s\n" , res);
+
+
+
+    return res ;
+}
+
+
+
+
+
 
 
 void remove_quote(char * str){
@@ -346,7 +414,7 @@ int main()
 
 
 
-    char * clipboard = NULL;
+    char * clipboard = NULL ;
     char * undo_info_command [1024];
     char * undo_info_str [1024];
     int undo_info_line_no;
@@ -513,6 +581,47 @@ int main()
         }
 
 
+
+                if (strcmp(items[0], "copystr") == 0){
+            //now get next params:
+            if(strcmp(items[1], "--file") == 0){
+                if(strcmp(items[3], "--pos") == 0){
+                    char * param6 = items[4]; //<line no>:<start position>
+                    int line_no;
+                    int start_pos;
+                    //split line_no:start_pos :
+                    sscanf(param6, "%d:%d", &line_no, &start_pos);
+
+                    if(strcmp(items[5], "--size") == 0){
+                        int size;
+                        sscanf(items[6], "%d", &size);
+
+                        if(strcmp(items[7], "--f") == 0 || strcmp(items[7], "--b") == 0){
+                            char * filename = items[2];
+                            char * direction = items[7]; // --f or --b
+         clipboard =copy_str(filename, line_no, start_pos, size, direction) ;
+                            printf("string is in clipboard! [%s]", clipboard);
+
+
+                        }
+                    }
+                }
+
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
         //cutstr –-file 200.txt –-pos 2:1 --size 3 --f
         if (strcmp(items[0], "cutstr") == 0){
             //now get next params:
@@ -619,7 +728,8 @@ int main()
 
 
 
-
+        else
+            printf("invalid command");
 
 
 
@@ -633,7 +743,7 @@ int main()
 
 
 
-    return 0;
+
 }
 
 
